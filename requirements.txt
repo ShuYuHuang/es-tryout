@@ -1,4 +1,9 @@
-elasticsearch
-openai
-tiktoken
+
+streamlit
+streamlit-chat
 langchain
+langchain-experimental
+openai
+python-dotenv
+elasticsearch
+tiktoken
