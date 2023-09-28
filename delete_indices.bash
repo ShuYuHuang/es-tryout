@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 # Elasticsearch server address
 ELASTICSEARCH_URL="localhost:9200"
