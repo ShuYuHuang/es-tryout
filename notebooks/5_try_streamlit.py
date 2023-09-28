@@ -32,6 +32,10 @@ if __name__ == '__main__':
             st.session_state['history'].append((query, result))
             return result
 
+        # Initialize chat history
+        if 'history' not in st.session_state:
+            st.session_state['history'] = []
+
         # Initialize messages
         if 'generated' not in st.session_state:
             st.session_state['generated'] = ["Hello ! Ask me about " + uploaded_file.name + " 🤗"]
