@@ -26,7 +26,36 @@ import dotenv
 dotenv.load_dotenv()
 ES_URL = "http://localhost:9200"
 
+embeddings_fn = OpenAIEmbeddings(request_timeout=60)
+text_splitter = CharacterTextSplitter(chunk_size=100, chunk_overlap=0) # can be pre-loaded
+
+# Function to store file in Elasticsearch
+@st.cache_resource()
+def store_file_in_elasticsearch(uploaded_file, index_name="paragraph-index"):
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as tmp_file:
+            # Save a temporary file
+            file_contents = uploaded_file.getvalue()
+            
+            tmp_file.write(file_contents)
+            tmp_file_path = tmp_file.name
+    # Load data
+    loader = TextLoader(tmp_file_path) # csv as example, but will include more
+    # Chunk data
+    
+    docs = loader.load_and_split(text_splitter)
+    # Store them to ElasticSearch DB
+    return ElasticsearchStore.from_documents(
+        docs, 
+        embeddings_fn, 
+        es_url=ES_URL, 
+        index_name=index_name,
+        distance_strategy="COSINE"
+        # distance_strategy="EUCLIDEAN_DISTANCE"
+        # distance_strategy="DOT_PRODUCT"
+    )
+
 if __name__ == '__main__':
+
     # Setup openai replyer
     llm = ChatOpenAI(
         model_name='gpt-3.5-turbo',
@@ -34,19 +63,30 @@ if __name__ == '__main__':
         max_tokens = 256
     )
     template ="""
-You are given the following history:
-{history}
-
-and the queried results:
+Queried results form database:
+```
 {queried}
+```
+
+History:
+```
+{history}
+```
 
 You are asked:
 {input}
 
-Please answer
+The questions are all related to either query results or history
+
+If the question is related to querying results:
+- Extract information from queried result and answer the question
+Else if the question is related to history:
+- Extract information from history and answer the question
+If the question is not related to either querying result or history:
+- Politely inform that the result is not related to either history or database
     """
 
-    prompt = PromptTemplate (
+    prompt = PromptTemplate(
         template=template,
         input_variables=["history", "input", "queried"]
     )
@@ -62,48 +102,25 @@ Please answer
 
     # Create a file uploader in the sidebar
     uploaded_file = st.sidebar.file_uploader("Upload File", type="txt")
-
-    embeddings_fn = OpenAIEmbeddings(request_timeout=60)
+    
+  
 
     # Handle file upload
     if uploaded_file:
         
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as tmp_file:
-            # Save a temporary file
-            file_contents = uploaded_file.read()
-            tmp_file.write(file_contents)
-            tmp_file_path = tmp_file.name
-            # Load data
-        loader = TextLoader(tmp_file_path) # csv as example, but will include more
-        documents = loader.load()
-        # Chunk data
-        text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=0) # can be pre-loaded
-        docs = text_splitter.split_documents(documents)
-        # Store them to ElasticSearch DB
-        db = ElasticsearchStore.from_documents(
-            docs, 
-            embeddings_fn, 
-            es_url=ES_URL, 
-            index_name="paragraph-index",
-            distance_strategy="COSINE"
-            # distance_strategy="EUCLIDEAN_DISTANCE"
-            # distance_strategy="DOT_PRODUCT"
-        )
-
-        
-
+        db = store_file_in_elasticsearch(uploaded_file, index_name="paragraph-index")
         # Initialize chat history
         if 'history' not in st.session_state:
             st.session_state['history'] = []
 
         # Function for conversational chat
         def conversational_chat(query):
-            docs = db.similarity_search(query)
+            db.client.indices.refresh(index="paragraph-index")
+            queried_docs = db.similarity_search(query, k=5)
             result = conversation.predict(
                 input=user_input,
-                history=st.session_state['history'],
-                queried = docs[0].page_content
+                history="\n".join(map(lambda x: f"user:{x[0]} | robot:{x[1]}",st.session_state['history'])),
+                queried = "\n".join(map(lambda x: x.page_content, queried_docs))
             )
             st.session_state['history'].append((query, result))
             return result
@@ -122,7 +139,7 @@ Please answer
         # User input form
         with container:
             with st.form(key='my_form', clear_on_submit=True):
-                user_input = st.text_input("Query:", placeholder="Talk to csv data 👉 (:", key='input')
+                user_input = st.text_input("Query:", placeholder="Talk to txt data 👉 (:", key='input')
                 submit_button = st.form_submit_button(label='Send')
 
             if submit_button and user_input:
