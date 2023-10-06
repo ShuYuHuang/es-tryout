@@ -3,31 +3,12 @@
     USER: I would like to prepare a meal, including Kongbao chicken and Arabic Lentil soup, what should I prepare?
 
     BOT:
-    For Kongbao chicken:
-    Chicken
-    Peanuts
-    Vegetables (such as bell peppers, carrots, and onions)
-    Soy sauce
-    Vinegar
-    Sugar
-    Cornstarch
-    Garlic
-    Ginger
-    Red chili flakes (optional)
-    Rice (for serving)
-    
-    For Arabic Lentil soup:
-    Lentils (yellow and orange)
-    Olive oil
-    Vegetables (such as onions, carrots, and celery)
-    Garlic
-    Cumin
-    Coriander
-    Turmeric
-    Salt
-    Pepper
-    Lemon juice (optional)
-    Fresh parsley (for garnish)
+    USER: What are the materials needed? for Kongbao chicken and Arabic Lentil soup?
+        USER: Make it a list in python
+
+        BOT: (neglected chitchats)
+            kongbao_chicken_materials = ['chicken', 'peanuts', 'vegetables', 'rice']
+            arabic_lentil_soup_materials = ['olive oil', 'cumin seeds', 'mustard', 'curry leaves', 'onion', 'garlic cloves', 'spices (salt, cumin, cinnamon, turmeric, black pepper, curry)', 'yellow lentils', 'orange lentils']
     ```
 
 - (given two files) There are only one file showed in the uploaded file list, though all hte data can be retrieved
