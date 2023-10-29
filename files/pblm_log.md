@@ -14,6 +14,20 @@
 - (given two files) There are only one file showed in the uploaded file list, though all hte data can be retrieved
     > Still solving
 
+- Repaeted queried contents, e.g.:
+    ```
+    The kong bau chicken is a Chinese dish, ...
+
+    The kong bau chicken is a Chinese dish, ...
+
+    The kong bau chicken is a Chinese dish, ...
+    ```
+    > Multiple Indexing
+    - cache indexing function
+    > Multiple uploading file
+    - use st.session_state['uploaded_list'] to store uploaded files
+
+
 - Unrelated answer in the second conversation, e.g.:
     ```
     (given the receipt_for_kongbao.txt)
