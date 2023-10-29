@@ -16,12 +16,6 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores.elasticsearch import ElasticsearchStore
 from langchain.embeddings.openai import OpenAIEmbeddings
 
-# For Conversation chain
-from langchain.chat_models import ChatOpenAI
-from langchain.chains import LLMChain
-from langchain.prompts.prompt import PromptTemplate
-
-
 import dotenv
 dotenv.load_dotenv()
 ES_URL = "http://localhost:9200"
